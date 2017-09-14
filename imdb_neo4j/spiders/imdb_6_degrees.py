@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-import string
 
 import scrapy
+from imdb_neo4j.items import ImdbPersonPage
+from scrapy.loader import ItemLoader
+    
 
 # from py2neo import Graph
 # from py2neo import Node
-
-from imdb.items import ImdbPersonPage
 
 class Imdb6DegreesSpider(scrapy.Spider):
     name = "imdb"
@@ -24,7 +24,7 @@ class Imdb6DegreesSpider(scrapy.Spider):
 #    graph = Graph("http://54.148.21.172:7474/db/data") # Remote
 
     def parse(self, response):
-        person_id = string.split(response.url, "/")[-2]
+        person_id = response.url.split("/")[-2]
 
 #        if (self.has_person_been_crawled(person_id)):
 #            return
@@ -35,7 +35,7 @@ class Imdb6DegreesSpider(scrapy.Spider):
         personPage['films'] = {}
         print('Person: ' + personPage['person_id'])
         for filmElement in response.xpath("//div[@id='filmography']/div[@id='filmo-head-actor']/following-sibling::div[contains(@class, 'filmo-category-section')][1]/div[contains(@class, 'filmo-row')]//a[starts-with(@href, '/title/tt')]"):
-            film_id = string.split(filmElement.xpath('@href').extract()[0], '/')[-2]
+            film_id = filmElement.xpath('@href').extract()[0].split('/')[-2]
 
             personPage['films'][film_id] = filmElement.xpath('text()').extract()[0]
 
@@ -47,7 +47,7 @@ class Imdb6DegreesSpider(scrapy.Spider):
 
     def parse_film_page(self, response):
         for personElement in response.xpath("//table[contains(@class, 'cast_list')]//td[contains(@itemprop, 'actor')]//a"):
-            person_id = string.split(personElement.xpath('@href').extract()[0], "/")[-2]
+            person_id = personElement.xpath('@href').extract()[0].split("/")[-2]
             if (person_id in self.people_crawled):
                 print('Person: ' + person_id + ' ALREADY CRAWLED')
                 return
